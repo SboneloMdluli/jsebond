@@ -6,7 +6,6 @@ import com.calculator.model.BondInformation;
 import com.calculator.model.Spot;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +17,7 @@ import org.springframework.stereotype.Service;
 public class JSEBondService extends BaseBond {
   @Autowired CalculatorConfig calculatorConfig = new CalculatorConfig();
   private static final Logger log = LoggerFactory.getLogger(JSEBondService.class);
-  private double ROUNDING_PRECISION;
+  private double ROUNDING_PRECISION = Math.pow(10, 5);
 
   public Spot calculateSpot(Bond bond) {
     init();
@@ -37,10 +36,10 @@ public class JSEBondService extends BaseBond {
 
   private boolean isCumex(Bond bond) {
     return isCumex(bond.getSettlementDate(), bond.getBondInformation().getBookCloseDate2())
-        && daysAccInterest(bond) > 0;
+        || daysAccInterest(bond) == 0;
   }
 
-  private long daysAccInterest(Bond bond) {
+  public long daysAccInterest(Bond bond) {
     if (isCumex(bond.getSettlementDate(), bond.getBondInformation().getBookCloseDate2())) {
       return ChronoUnit.DAYS.between(
           bond.getBondInformation().getLastCouponDate(), bond.getSettlementDate());
@@ -58,7 +57,7 @@ public class JSEBondService extends BaseBond {
     }
   }
 
-  private double brokenPeriod(Bond bond) {
+  public double brokenPeriod(Bond bond) {
     final LocalDate nextCouponDate = bond.getBondInformation().getNextCouponDate();
     if (bond.getBondInformation().getMaturityDate().isEqual(nextCouponDate)) {
       return ChronoUnit.DAYS.between(bond.getSettlementDate(), nextCouponDate) / (365 / 2.0);
@@ -71,7 +70,7 @@ public class JSEBondService extends BaseBond {
     }
   }
 
-  private double bpFactor(Bond bond) {
+  public double bpFactor(Bond bond) {
     double semiAnnualFactor = semiAnnualDiscountFactor(bond.getYieldToMaturity());
     double brokenPeriod = brokenPeriod(bond);
     log.info("BP {}", brokenPeriod);
@@ -120,8 +119,7 @@ public class JSEBondService extends BaseBond {
     }
   }
 
-  public void isSettlementDateValid(
-      @NonNull LocalDate settlementDate, @NonNull BondInformation bondInformation) {
+  public void isSettlementDateValid(LocalDate settlementDate, BondInformation bondInformation) {
     if (!bondInformation.getMaturityDate().isEqual(settlementDate)) {
       if (bondInformation.getNextCouponDate().isEqual(bondInformation.getLastCouponDate())
           || bondInformation.getNextCouponDate().isBefore(bondInformation.getLastCouponDate())) {
@@ -130,7 +128,8 @@ public class JSEBondService extends BaseBond {
     } else {
       if (!(settlementDate.isEqual(bondInformation.getLastCouponDate())
           && settlementDate.isEqual(bondInformation.getNextCouponDate()))) {
-        throw new IllegalArgumentException("Last and next coupon dates are not equal to maturity date");
+        throw new IllegalArgumentException(
+            "Last and next coupon dates are not equal to maturity date");
       }
     }
   }
