@@ -31,6 +31,6 @@ public class CalculatorController {
   public ResponseEntity<Spot> computeSpot(@RequestBody Bond bond) {
 
     userService.isSettlementDateValid(bond.getSettlementDate(),bond.getBondInformation());
-    return new ResponseEntity<>(userService.calculateSpot(bond), HttpStatus.CREATED);
+    return new ResponseEntity<>(userService.calculateSpot(bond), HttpStatus.OK);
   }
 }

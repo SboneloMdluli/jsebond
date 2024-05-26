@@ -122,6 +122,9 @@ public class BondInformation {
   }
 
   public void setBookCloseDate2(LocalDate bookCloseDate2) {
+    if (!bookCloseDate2.isAfter(getBookCloseDate1())) {
+      throw new IllegalArgumentException("Book close dates are not ordered");
+    }
     this.bookCloseDate2 = bookCloseDate2;
   }
 

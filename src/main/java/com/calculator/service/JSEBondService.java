@@ -6,19 +6,25 @@ import com.calculator.model.BondInformation;
 import com.calculator.model.Spot;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
-@RequiredArgsConstructor
 public class JSEBondService extends BaseBond {
+
   @Autowired CalculatorConfig calculatorConfig = new CalculatorConfig();
   private static final Logger log = LoggerFactory.getLogger(JSEBondService.class);
   private double ROUNDING_PRECISION = Math.pow(10, 5);
 
+
+  /**
+   * Calculate bond spot.
+   *
+   * @param bond the bond
+   * @return the spot
+   */
   public Spot calculateSpot(Bond bond) {
     init();
     Spot bondSpot = new Spot();
@@ -34,11 +40,25 @@ public class JSEBondService extends BaseBond {
     ROUNDING_PRECISION = Math.pow(10, calculatorConfig.getPround());
   }
 
+  /**
+   * Check if bond is cum-interest or ex-interest. <br>
+   * The bond is cum-interest if the settlement date coincides with one of the bond's coupon payment
+   * dates
+   *
+   * @param bond the bond
+   * @return Returns true if the bond is cum-interest and false if ex-interest.
+   */
   private boolean isCumex(Bond bond) {
     return isCumex(bond.getSettlementDate(), bond.getBondInformation().getBookCloseDate2())
         || daysAccInterest(bond) == 0;
   }
 
+  /**
+   * Days acc interest long.
+   *
+   * @param bond the bond
+   * @return the long
+   */
   public long daysAccInterest(Bond bond) {
     if (isCumex(bond.getSettlementDate(), bond.getBondInformation().getBookCloseDate2())) {
       return ChronoUnit.DAYS.between(
@@ -57,6 +77,12 @@ public class JSEBondService extends BaseBond {
     }
   }
 
+  /**
+   * Calculate bond broken period.
+   *
+   * @param bond JSE bond
+   * @return broken period
+   */
   public double brokenPeriod(Bond bond) {
     final LocalDate nextCouponDate = bond.getBondInformation().getNextCouponDate();
     if (bond.getBondInformation().getMaturityDate().isEqual(nextCouponDate)) {
@@ -70,6 +96,12 @@ public class JSEBondService extends BaseBond {
     }
   }
 
+  /**
+   * Calculate broken period factor.
+   *
+   * @param bond JSE bond
+   * @return broken period factor
+   */
   public double bpFactor(Bond bond) {
     double semiAnnualFactor = semiAnnualDiscountFactor(bond.getYieldToMaturity());
     double brokenPeriod = brokenPeriod(bond);
@@ -83,6 +115,12 @@ public class JSEBondService extends BaseBond {
     }
   }
 
+  /**
+   * Get bond accrued interest.
+   *
+   * @param bond JSE bond
+   * @return accrued interest
+   */
   public double getAccruedInterest(Bond bond) {
     return Math.round(
             ROUNDING_PRECISION
@@ -92,6 +130,12 @@ public class JSEBondService extends BaseBond {
         / ROUNDING_PRECISION;
   }
 
+  /**
+   * Get bond all in price.
+   *
+   * @param bond JSE bond
+   * @return all in price
+   */
   public double getAllInPrice(Bond bond) {
     BondInformation bondInformation = bond.getBondInformation();
     double discountFactor = bpFactor(bond);
@@ -103,14 +147,13 @@ public class JSEBondService extends BaseBond {
         numberOfDaysNCD(bondInformation.getMaturityDate(), bondInformation.getNextCouponDate());
     log.info("F {}", semiAnnualDF);
     log.info("BPF {}", discountFactor);
-    log.info("N {}", daysToNextCoupon);
     if (semiAnnualDF != 1.0) {
       double ratio =
           ((cpn * semiAnnualDF) * (1 - Math.pow(semiAnnualDF, daysToNextCoupon)))
               / (1 - semiAnnualDF);
       double allInPrice =
           discountFactor
-              * (cpnNCD + ratio + redemptionAmount * Math.pow(semiAnnualDF, daysToNextCoupon));
+              * (cpnNCD + ratio + (redemptionAmount * Math.pow(semiAnnualDF, daysToNextCoupon)));
 
       return Math.round(ROUNDING_PRECISION * allInPrice) / ROUNDING_PRECISION;
     } else {
@@ -119,7 +162,14 @@ public class JSEBondService extends BaseBond {
     }
   }
 
+  /**
+   * Validate settlement date.
+   *
+   * @param settlementDate the settlement date
+   * @param bondInformation the bond information
+   */
   public void isSettlementDateValid(LocalDate settlementDate, BondInformation bondInformation) {
+
     if (!bondInformation.getMaturityDate().isEqual(settlementDate)) {
       if (bondInformation.getNextCouponDate().isEqual(bondInformation.getLastCouponDate())
           || bondInformation.getNextCouponDate().isBefore(bondInformation.getLastCouponDate())) {
@@ -134,6 +184,13 @@ public class JSEBondService extends BaseBond {
     }
   }
 
+  /**
+   * Get bond clean price double.
+   *
+   * @param allInPrice the all in price
+   * @param accruedInterest the accrued interest
+   * @return clean price
+   */
   public double cleanPrice(double allInPrice, double accruedInterest) {
     return Math.round(ROUNDING_PRECISION * (allInPrice - accruedInterest)) / ROUNDING_PRECISION;
   }
