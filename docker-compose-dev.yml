@@ -1,9 +1,0 @@
-version: '3.8'
-services:
-  bond-calculator:
-    build:
-      context: .
-    ports:
-      - 8080:8080
-    volumes:
-          - ./src:/src/
