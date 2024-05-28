@@ -4,6 +4,7 @@ import model.BondInformationBuilder;
 import model.Spot;
 import service.JSEBondCalculator;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class Main {
@@ -15,8 +16,8 @@ public class Main {
 
         /*************************** Example 1 *************************************/
         /* create bond information */
-        BondInformation bondInformation = new BondInformationBuilder()
-                .withCoupon(10.5)
+        final BondInformation bondInformation = new BondInformationBuilder()
+                .withCoupon(BigDecimal.valueOf(10.5))
                 .withMaturityDate(LocalDate.of(2026, 12, 21))
                 .withLastCouponDate(LocalDate.of(2016, 12, 21))
                 .withNextCouponDate(LocalDate.of(2017, 6, 21))
@@ -25,7 +26,7 @@ public class Main {
                 .build();
 
         /*create bond with given bond information*/
-        Bond bond = new Bond(bondInformation);
+        final Bond bond = new Bond(bondInformation);
         bond.setSettlementDate(LocalDate.of(2017, 2, 7));
         bond.setYieldToMaturity(8.75);
         JSEBondCalculator jseBondService = new JSEBondCalculator();
@@ -38,8 +39,8 @@ public class Main {
 
         /*************************** Example 2 *************************************/
         /* create bond information */
-        BondInformation bondInformation1 = new BondInformationBuilder()
-                .withCoupon(8.25)
+        final BondInformation bondInformation1 = new BondInformationBuilder()
+                .withCoupon(BigDecimal.valueOf(8.25))
                 .withMaturityDate(LocalDate.of(2032, 3, 31))
                 .withLastCouponDate(LocalDate.of(2024, 3, 31))
                 .withNextCouponDate(LocalDate.of(2024, 9, 30))
@@ -47,8 +48,9 @@ public class Main {
                 .withBookCloseDate2(LocalDate.of(2024, 9, 20))
                 .build();
 
+
         /*Bond with different bond information*/
-        Bond bond1 = new Bond(bondInformation1);
+        final Bond bond1 = new Bond(bondInformation1);
         bond1.setSettlementDate(LocalDate.of(2024, 5, 16));
         bond1.setYieldToMaturity(9.5);
         Spot spot1 = jseBondService.getSpotMetrics(bond1);

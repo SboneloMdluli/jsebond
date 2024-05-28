@@ -1,9 +1,10 @@
 package model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public final class BondInformationBuilder {
-    private double coupon;
+    private BigDecimal coupon;
     private LocalDate maturityDate;
     private int redemptionAmount = 100;
     private LocalDate lastCouponDate;
@@ -11,7 +12,7 @@ public final class BondInformationBuilder {
     private LocalDate bookCloseDate1;
     private LocalDate bookCloseDate2;
 
-    public BondInformationBuilder withCoupon(double coupon) {
+    public BondInformationBuilder withCoupon(BigDecimal coupon) {
         this.coupon = coupon;
         return this;
     }

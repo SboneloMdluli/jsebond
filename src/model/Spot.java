@@ -1,11 +1,13 @@
 package model;
 
-public class Spot {
-    private double allInPrice;
-    private double cleanPrice;
-    private double accruedInterest;
+import java.math.BigDecimal;
 
-    public Spot(double allInPrice, double cleanPrice, double accruedInterest) {
+public class Spot {
+    private BigDecimal allInPrice;
+    private BigDecimal cleanPrice;
+    private BigDecimal accruedInterest;
+
+    public Spot(BigDecimal allInPrice, BigDecimal cleanPrice, BigDecimal accruedInterest) {
         this.allInPrice = allInPrice;
         this.cleanPrice = cleanPrice;
         this.accruedInterest = accruedInterest;
@@ -14,27 +16,27 @@ public class Spot {
     public Spot() {
     }
 
-    public double getAllInPrice() {
+    public BigDecimal getAllInPrice() {
         return this.allInPrice;
     }
 
-    public double getCleanPrice() {
+    public BigDecimal getCleanPrice() {
         return this.cleanPrice;
     }
 
-    public double getAccruedInterest() {
+    public BigDecimal getAccruedInterest() {
         return this.accruedInterest;
     }
 
-    public void setAllInPrice(double allInPrice) {
+    public void setAllInPrice(BigDecimal allInPrice) {
         this.allInPrice = allInPrice;
     }
 
-    public void setCleanPrice(double cleanPrice) {
+    public void setCleanPrice(BigDecimal cleanPrice) {
         this.cleanPrice = cleanPrice;
     }
 
-    public void setAccruedInterest(double accruedInterest) {
+    public void setAccruedInterest(BigDecimal accruedInterest) {
         this.accruedInterest = accruedInterest;
     }
 

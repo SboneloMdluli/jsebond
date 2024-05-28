@@ -1,5 +1,6 @@
 package service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
@@ -32,7 +33,7 @@ abstract class BaseBond {
    * @param maturity the maturity
    * @return semi annual discount factor
    */
-  public double semiAnnualDiscountFactor(double maturity) {
-    return (1 / (1 + maturity / 200));
+  public BigDecimal semiAnnualDiscountFactor(double maturity) {
+    return BigDecimal.valueOf(1 / (1 + maturity / 200));
   }
 }

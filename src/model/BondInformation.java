@@ -1,11 +1,12 @@
 package model;
 
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 public class BondInformation {
 
-    private double coupon;
+    private BigDecimal coupon;
     private LocalDate maturityDate;
     private int redemptionAmount = 100;
     private LocalDate lastCouponDate;
@@ -13,7 +14,7 @@ public class BondInformation {
     private LocalDate bookCloseDate1;
     private LocalDate bookCloseDate2;
 
-    public BondInformation(double coupon, LocalDate maturityDate, int redemptionAmount, LocalDate lastCouponDate, LocalDate nextCouponDate, LocalDate bookCloseDate1, LocalDate bookCloseDate2) {
+    public BondInformation(BigDecimal coupon, LocalDate maturityDate, int redemptionAmount, LocalDate lastCouponDate, LocalDate nextCouponDate, LocalDate bookCloseDate1, LocalDate bookCloseDate2) {
         this.coupon = coupon;
         this.maturityDate = maturityDate;
         this.redemptionAmount = redemptionAmount;
@@ -30,14 +31,14 @@ public class BondInformation {
         return new BondInformationBuilder();
     }
 
-    public void setCoupon(double coupon) {
-        if (coupon < 0) {
+    public void setCoupon(BigDecimal coupon) {
+        if (coupon.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Coupon cannot be negative");
         }
         this.coupon = coupon;
     }
 
-    public double getCoupon() {
+    public BigDecimal getCoupon() {
         return this.coupon;
     }
 

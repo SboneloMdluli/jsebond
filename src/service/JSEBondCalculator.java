@@ -4,11 +4,14 @@ import model.Bond;
 import model.BondInformation;
 import model.Spot;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 
 public class JSEBondCalculator extends BaseBond {
     private double ROUNDING_PRECISION = Math.pow(10, 5);
+    MathContext m = new MathContext(20);
 
     /**
      * Calculate bond spot.
@@ -18,8 +21,8 @@ public class JSEBondCalculator extends BaseBond {
      */
     public Spot getSpotMetrics(Bond bond) {
         Spot bondSpot = new Spot();
-        double allInPrice = getAllInPrice(bond);
-        double accruedInterest = getAccruedInterest(bond);
+        BigDecimal allInPrice = getAllInPrice(bond);
+        BigDecimal accruedInterest = getAccruedInterest(bond);
         bondSpot.setAccruedInterest(accruedInterest);
         bondSpot.setAllInPrice(allInPrice);
         bondSpot.setCleanPrice(cleanPrice(allInPrice, accruedInterest));
@@ -61,11 +64,11 @@ public class JSEBondCalculator extends BaseBond {
         }
     }
 
-    private double couponForNCD(Bond bond) {
+    private BigDecimal couponForNCD(Bond bond) {
         if (isCumex(bond)) {
-            return bond.getBondInformation().getCoupon() / 2;
+            return bond.getBondInformation().getCoupon().divide(BigDecimal.valueOf(2),m);
         } else {
-            return 0;
+            return BigDecimal.ZERO;
         }
     }
 
@@ -75,14 +78,14 @@ public class JSEBondCalculator extends BaseBond {
      * @param bond JSE bond
      * @return broken period
      */
-    public double brokenPeriod(Bond bond) {
+    public BigDecimal brokenPeriod(Bond bond) {
         final LocalDate nextCouponDate = bond.getBondInformation().getNextCouponDate();
         if (bond.getBondInformation().getMaturityDate().isEqual(nextCouponDate)) {
-            return ChronoUnit.DAYS.between(bond.getSettlementDate(), nextCouponDate) / (365 / 2.0);
+            return BigDecimal.valueOf(ChronoUnit.DAYS.between(bond.getSettlementDate(), nextCouponDate) / (365 / 2.0));
         } else {
             double nextCouponSettlementDiff = ChronoUnit.DAYS.between(bond.getSettlementDate(), nextCouponDate);
             double nextCouponLastCouponDiff = ChronoUnit.DAYS.between(bond.getBondInformation().getLastCouponDate(), nextCouponDate);
-            return nextCouponSettlementDiff / nextCouponLastCouponDiff;
+            return BigDecimal.valueOf(nextCouponSettlementDiff).divide(BigDecimal.valueOf(nextCouponLastCouponDiff),m) ;
         }
     }
 
@@ -92,13 +95,13 @@ public class JSEBondCalculator extends BaseBond {
      * @param bond JSE bond
      * @return broken period factor
      */
-    public double bpFactor(Bond bond) {
-        double semiAnnualFactor = semiAnnualDiscountFactor(bond.getYieldToMaturity());
-        double brokenPeriod = brokenPeriod(bond);
+    public BigDecimal bpFactor(Bond bond) {
+        BigDecimal semiAnnualFactor = semiAnnualDiscountFactor(bond.getYieldToMaturity());
+        BigDecimal brokenPeriod = brokenPeriod(bond);
         if (bond.getBondInformation().getMaturityDate().isEqual(bond.getBondInformation().getNextCouponDate())) {
-            return semiAnnualFactor / (semiAnnualFactor + brokenPeriod * (1 - semiAnnualFactor));
+            return semiAnnualFactor.divide(semiAnnualFactor.add(brokenPeriod.multiply((BigDecimal.valueOf(1).subtract(semiAnnualFactor)))),m);
         } else {
-            return Math.pow(semiAnnualFactor, brokenPeriod);
+            return BigDecimal.valueOf((Math.pow(semiAnnualFactor.doubleValue(),brokenPeriod.doubleValue())));
         }
     }
 
@@ -108,8 +111,8 @@ public class JSEBondCalculator extends BaseBond {
      * @param bond JSE bond
      * @return accrued interest
      */
-    public double getAccruedInterest(Bond bond) {
-        return Math.round(ROUNDING_PRECISION * daysAccInterest(bond) * bond.getBondInformation().getCoupon() / 365) / ROUNDING_PRECISION;
+    public BigDecimal getAccruedInterest(Bond bond) {
+       return BigDecimal.valueOf(daysAccInterest(bond)).multiply(bond.getBondInformation().getCoupon()).divide(BigDecimal.valueOf(365),m);
     }
 
     /**
@@ -118,34 +121,33 @@ public class JSEBondCalculator extends BaseBond {
      * @param bond JSE bond
      * @return all in price
      */
-    public double getAllInPrice(Bond bond) {
+    public BigDecimal getAllInPrice(Bond bond) {
         BondInformation bondInformation = bond.getBondInformation();
-        double discountFactor = bpFactor(bond);
-        double cpn = bondInformation.getCoupon() / 2;
-        double cpnNCD = couponForNCD(bond);
-        double semiAnnualDF = semiAnnualDiscountFactor(bond.getYieldToMaturity());
+        BigDecimal discountFactor = bpFactor(bond);
+        BigDecimal cpn = bondInformation.getCoupon().divide(    BigDecimal.valueOf(2),m);
+        BigDecimal cpnNCD = couponForNCD(bond);
+        BigDecimal semiAnnualDF = semiAnnualDiscountFactor(bond.getYieldToMaturity());
         double redemptionAmount = bond.getBondInformation().getRedemptionAmount();
         double daysToNextCoupon = numberOfDaysNCD(bondInformation.getMaturityDate(), bondInformation.getNextCouponDate());
-        if (semiAnnualDF != 1.0) {
-            double ratio = ((cpn * semiAnnualDF) * (1 - Math.pow(semiAnnualDF, daysToNextCoupon))) / (1 - semiAnnualDF);
-            double allInPrice = discountFactor * (cpnNCD + ratio + (redemptionAmount * Math.pow(semiAnnualDF, daysToNextCoupon)));
-
-            return Math.round(ROUNDING_PRECISION * allInPrice) / ROUNDING_PRECISION;
+        if (!semiAnnualDF.equals(BigDecimal.ONE)) {
+            BigDecimal ratio = cpn.multiply(semiAnnualDF).multiply((BigDecimal.valueOf(1).subtract(BigDecimal.valueOf(Math.pow(semiAnnualDF.doubleValue(), daysToNextCoupon)))).divide(BigDecimal.valueOf(1).subtract(semiAnnualDF),m));
+            BigDecimal allInPrice = discountFactor.multiply((cpnNCD.add(ratio).add(BigDecimal.valueOf(redemptionAmount * Math.pow(semiAnnualDF.doubleValue(), daysToNextCoupon)))));
+            return allInPrice;
         } else {
-            return Math.round(ROUNDING_PRECISION * (cpnNCD + cpn * daysToNextCoupon + redemptionAmount)) / ROUNDING_PRECISION;
+            return cpnNCD.add(cpn.multiply(BigDecimal.valueOf(daysToNextCoupon))).add(BigDecimal.valueOf(redemptionAmount));
         }
     }
 
 
 
     /**
-     * Get bond clean price double.
+     * Get bond clean price.
      *
-     * @param allInPrice      the all in price
+     * @param allInPrice the all in price
      * @param accruedInterest the accrued interest
      * @return clean price
      */
-    public double cleanPrice(double allInPrice, double accruedInterest) {
-        return Math.round(ROUNDING_PRECISION * (allInPrice - accruedInterest)) / ROUNDING_PRECISION;
+    public BigDecimal cleanPrice(BigDecimal allInPrice, BigDecimal accruedInterest) {
+        return allInPrice.subtract(accruedInterest);
     }
 }
