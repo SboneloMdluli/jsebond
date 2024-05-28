@@ -44,7 +44,7 @@ public class Main {
                 .withLastCouponDate(LocalDate.of(2024, 3, 31))
                 .withNextCouponDate(LocalDate.of(2024, 9, 30))
                 .withBookCloseDate1(LocalDate.of(2024, 3, 21))
-                .withBookCloseDate2(LocalDate.of(2024, 12, 20))
+                .withBookCloseDate2(LocalDate.of(2024, 9, 20))
                 .build();
 
         /*Bond with different bond information*/
