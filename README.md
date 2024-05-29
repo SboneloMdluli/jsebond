@@ -18,7 +18,7 @@ The algorithm for the calculation has been developed and was made available as p
 ### Robustness
 * Attempt to divide by zero: The code throws and exception when the yield is set a number less than or equals to -200. This is consistent with the behavior of the online calculator.
 *  Date validation : Book close date 1 is always less than Book close date 2. Coupon date 1 is always less than Coupon date 2. An exception is thrown when these conditions are not met.
-*  An exception is thrown when a negative coupon is set. The minimum coupon we can have is zero which will give us a ZCB(zero coupon bond). Depending on the value of the yield to maturity can we have a bond trading par value i.e $yield-to-maturity=0$ and $all in price = clean price = 100$. Trading below par i.e $yield-to-maturity > 0$ and $all in price = clean price < 100$. Trading at a premium $yield-to-maturity < 0$ and $all in price = clean price > 100$. 
+*  An exception is thrown when a negative coupon is set. The minimum coupon we can have is zero which will give us a ZCB(zero coupon bond). Depending on the value of the yield to maturity we can have a bond trading par value i.e $yield-to-maturity=0$ and $all in price = clean price = 100$. Trading below par i.e $yield-to-maturity > 0$ and $all in price = clean price < 100$. Trading at a premium $yield-to-maturity < 0$ and $all in price = clean price > 100$. 
 *  All these throw an `IllegalArgumentException` with a custom message.
 
 ## Data Structures
